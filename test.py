@@ -17,10 +17,15 @@ def kernel(x, y):
 rng = (0, 2)
 x = np.sort(np.random.uniform(rng[0], rng[1], 100))
 y = np.sin(x)
-yerr = 0.05 * np.ones_like(y)
-u = np.linspace(rng[0], rng[1], 4000)
+yerr = 0.05
+u = np.linspace(rng[0], rng[1], 1000)
 
 mat = SKIMatrix(kernel, u, x, yerr)
+num = mat.get_matrix()
 
-print(np.linalg.slogdet(mat.get_matrix()))
-print(np.sum(np.log(100 / 4000. * mat.Kuu.f_c.real[:100] + yerr**2)))
+n = 15
+# print(mat.Kuu.eigvals()[:n])
+# print(mat.Kuu.eigvals(approx=False)[:n])
+
+print(np.linalg.slogdet(num))
+print(np.sum(np.log(mat.eigvals())))

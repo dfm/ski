@@ -30,6 +30,11 @@ def test_toeplitz(N=50):
     assert np.allclose(np.linalg.solve(cnum, y[:, 0]), cmat.solve(y[:, 0]))
     assert np.allclose(np.linalg.solve(cnum, y), cmat.solve(y))
 
+    # Test eigenvalues.
+    ev = np.linalg.eigvals(cnum)
+    ev = ev[np.argsort(np.abs(ev))[::-1]]
+    assert np.allclose(np.abs(cmat.eigvals()), np.abs(ev))
+
     print("Testing Toeplitz linear algebra...")
     tnum = toeplitz(c_row)
     tmat = ToeplitzMatrix(c_row)
@@ -64,13 +69,13 @@ def test_interp(seed=1234, N=10, M=40):
 
 def test_ski(seed=1234, N=100, M=1000):
     def kernel(x, y):
-        return np.exp(-0.5 * ((x - y) / 0.01) ** 2)
+        return 0.5 * np.exp(-0.5 * ((x - y) / 0.08) ** 2)
 
     np.random.seed(seed)
     rng = (0, 2)
     x = np.sort(np.random.uniform(rng[0], rng[1], N))
     y = np.sin(x)
-    yerr = 0.05 * np.ones_like(y)
+    yerr = 0.1
     u = np.linspace(rng[0], rng[1], M)
 
     mat = SKIMatrix(kernel, u, x, yerr)
@@ -79,7 +84,8 @@ def test_ski(seed=1234, N=100, M=1000):
     assert np.allclose(mat.Kuu.dot(u), mat.Kuu.get_matrix().dot(u))
     assert np.allclose(mat.W.dot(u), mat.W.get_matrix().dot(u))
     assert np.allclose(mat.dot(y), mat.get_matrix().dot(y))
+    assert np.allclose(mat.logdet(), np.linalg.slogdet(mat.get_matrix())[1])
 
     r = cg(mat, y, np.zeros_like(y), verbose=True, tol=1e-8)
     r0 = np.linalg.solve(mat.get_matrix(), y)
-    assert np.allclose(r, r0)
+    assert np.allclose(r, r0, atol=1e-6)

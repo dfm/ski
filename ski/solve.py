@@ -2,7 +2,7 @@
 
 from __future__ import division, print_function
 
-__all__ = ["cg"]
+__all__ = ["cg", "eig_pow_iter"]
 
 import numpy as np
 
@@ -45,3 +45,13 @@ def cg(A, b, x0=None, M=None, maxiter=400, verbose=False, tol=1e-6):
         oldrho = rho
 
     raise np.linalg.LinAlgError("conjugate gradient solve failed to converge")
+
+
+def eig_pow_iter(A):
+    b = np.ones(A.shape[0])
+    for i in range(100):
+        b = A.dot(b)
+        norm = np.sqrt(np.sum(b**2))
+        print(norm)
+        b /= norm
+    assert 0

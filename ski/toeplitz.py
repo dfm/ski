@@ -46,6 +46,10 @@ class CirculantMatrix(object):
                                 axis=0)
         raise ValueError("unsupported dimensions")
 
+    def eigvals(self, sort=True):
+        e = np.fft.fft(self.row)
+        return e[np.argsort(np.abs(e))[::-1]]
+
 
 class ToeplitzMatrix(object):
 
@@ -98,7 +102,7 @@ class ToeplitzMatrix(object):
 
         raise ValueError("unsupported dimensions")
 
-    def logdet(self):
+    def logdet(self, sig2=0.0):
         n = self.N - 1
         lam = np.zeros(n)
         ghat = np.zeros(n)
@@ -107,6 +111,7 @@ class ToeplitzMatrix(object):
         r = self.row[1:] / self.row[0]
         lam[0] = 1 - r[0] ** 2
         ghat[0] = -r[0]
+        print(lam[0] * self.row[0])
 
         for i in xrange(n-1):
             gamma[i] = -r[i+1]
@@ -115,4 +120,5 @@ class ToeplitzMatrix(object):
             ghat[0] = gamma[i] / lam[i]
             lam[i+1] = lam[i] - gamma[i]**2 / lam[i]
 
+        print(lam[:15])
         return np.sum(np.log(lam)) + (n+1) * np.log(self.row[0])

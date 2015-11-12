@@ -107,18 +107,14 @@ class ToeplitzMatrix(object):
         lam = np.zeros(n)
         ghat = np.zeros(n)
         gamma = np.zeros(n)
-
         r = self.row[1:] / self.row[0]
         lam[0] = 1 - r[0] ** 2
         ghat[0] = -r[0]
-        print(lam[0] * self.row[0])
 
         for i in xrange(n-1):
             gamma[i] = -r[i+1]
             gamma[i] -= np.sum(r[:i+1] * ghat[:i+1])
             ghat[1:i+2] = ghat[:i+1] + gamma[i] / lam[i] * ghat[:i+1][::-1]
             ghat[0] = gamma[i] / lam[i]
-            lam[i+1] = lam[i] - gamma[i]**2 / lam[i]
 
-        print(lam[:15])
         return np.sum(np.log(lam)) + (n+1) * np.log(self.row[0])

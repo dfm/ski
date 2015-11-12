@@ -4,6 +4,7 @@ from __future__ import division, print_function
 
 __all__ = ["test_toeplitz", "test_interp", "test_ski"]
 
+import time
 import numpy as np
 from scipy.linalg import circulant, toeplitz
 
@@ -49,9 +50,9 @@ def test_toeplitz(N=50):
     assert np.allclose(np.linalg.solve(tnum, y),
                        tmat.solve(y, tol=1e-12, verbose=True))
 
-    # Test logdet.
-    _, logdet0 = np.linalg.slogdet(tnum)
-    assert np.allclose(logdet0, tmat.logdet())
+    # # Test logdet.
+    # _, logdet0 = np.linalg.slogdet(tnum)
+    # assert np.allclose(logdet0, tmat.logdet())
 
 
 def test_interp(seed=1234, N=10, M=40):
@@ -67,7 +68,7 @@ def test_interp(seed=1234, N=10, M=40):
                        np.dot(mat.get_matrix().T, y))
 
 
-def test_ski(seed=1234, N=100, M=1000):
+def test_ski(seed=1234, N=1000, M=10000):
     def kernel(x, y):
         return 0.5 * np.exp(-0.5 * ((x - y) / 0.08) ** 2)
 
@@ -79,13 +80,37 @@ def test_ski(seed=1234, N=100, M=1000):
     u = np.linspace(rng[0], rng[1], M)
 
     mat = SKIMatrix(kernel, u, x, yerr)
+    num = mat.get_matrix()
+
+    strt = time.time()
+    ld1 = mat.logdet()
+    print(time.time() - strt)
+    strt = time.time()
+    ld2 = np.linalg.slogdet(num)[1]
+    print(time.time() - strt)
+
+    strt = time.time()
+    r1 = mat.solve(y, tol=1e-8)
+    print(time.time() - strt)
+    strt = time.time()
+    r2 = cg(mat, y, tol=1e-8)
+    print(time.time() - strt)
+    strt = time.time()
+    r3 = np.linalg.solve(num, y)
+    print(time.time() - strt)
+    assert 0
+
     assert np.allclose(mat.W.dot(y, transpose=True),
                        mat.W.get_matrix().T.dot(y))
     assert np.allclose(mat.Kuu.dot(u), mat.Kuu.get_matrix().dot(u))
     assert np.allclose(mat.W.dot(u), mat.W.get_matrix().dot(u))
-    assert np.allclose(mat.dot(y), mat.get_matrix().dot(y))
-    assert np.allclose(mat.logdet(), np.linalg.slogdet(mat.get_matrix())[1])
+    assert np.allclose(mat.dot(y), num.dot(y))
 
-    r = cg(mat, y, np.zeros_like(y), verbose=True, tol=1e-8)
+    e1 = np.sort(np.abs(mat.eigvals()))
+    e2 = np.sort(np.abs(np.linalg.eigvals(num)))
+    assert np.allclose(e1, e2[-len(e1):])
+
     r0 = np.linalg.solve(mat.get_matrix(), y)
     assert np.allclose(r, r0, atol=1e-6)
+
+    assert 0
